@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pixel Perfect Camera</title>
+<style>
+#content{
+  font-size: 20px;
+  position: relative;
+  z-index:1;
+  height: 1000px;
+  margin: 0 auto;
+}
+.placeholder-box{
+  float: left;
+  box-sizing:border-box;
+  width: 150px;
+  height: 150px;
+  margin: 0 10px 10px 0;
+  border:3px dotted #ccc;
+}
+.placeholder-sphere{
+  float: right;
+  box-sizing:border-box;
+  width: 100px;
+  height: 100px;
+  margin: 0 0 10px 10px;
+  border:3px dotted #ccc;
+}
+.placeholder-miku{
+  float: left;
+  box-sizing:border-box;
+  width: 200px;
+  height: 200px;
+  margin: 0 10px 10px 0;
+  border:3px dotted #ccc;
+}
+</style>
+</head>
+<body>
+
+<div id="content">
+  <h1>Try to scroll down</h1>
+  <div class="placeholder-box">the box</div>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <div class="placeholder-sphere">the sphere should be here!</div>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <div class="placeholder-miku">miku should be here!</div>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+</div>
+
+
+<script src="three.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script>
+
+var width  = window.innerWidth,
+    height = window.innerHeight,
+    cx = width / 2,
+    cy = height / 2,
+    clock = new THREE.Clock(),
+    fov = 30;
+
+var scene = new THREE.Scene();
+
+var helper = new THREE.AxisHelper();
+helper.scale.set( 500, 500, 500 );
+helper.position.set( cx, cy, 0 );
+scene.add( helper );
+
+var camera = new THREE.PerspectiveCamera( fov, width / height, 0.1, 10000 );
+camera.scale.set( 1, 1, 1 );
+
+var fovInRadians = Math.tan( fov / 360 * Math.PI );
+var cameraZ = ( height / 2 ) / fovInRadians;
+camera.scale.x = -1;
+camera.position.set( cx, cy, cameraZ );
+camera.rotation.set( 0, 0, Math.PI );
+
+var viewport = document.createElement( 'canvas' );
+viewport.style.position = 'fixed';
+viewport.style.zIndex = 10;
+viewport.style.top = 0;
+viewport.style.left = 0;
+viewport.style.display = 'block';
+viewport.style.pointerEvents = 'none';
+var renderer = new THREE.WebGLRenderer( { canvas: viewport, alpha: true } );
+renderer.setClearColor( 0x000000, 0 );
+renderer.setSize( width, height );
+document.body.appendChild( renderer.domElement );
+
+
+var ambientLight = new THREE.AmbientLight( 0x333333 );
+scene.add( ambientLight );
+
+var directionalLight = new THREE.DirectionalLight( 0xffffff );
+directionalLight.position.set( 0, -1, 1 ).normalize();
+scene.add( directionalLight );
+
+var render = function () {
+  var scroll = window.pageXOffset;
+  var scroll = window.pageYOffset;
+  camera.position.x =  scrollX + width / 2;
+  camera.position.y =  scrollY + height / 2;
+  renderer.render( scene, camera );
+}
+
+var updateCamera = function () {
+  width = window.innerWidth,
+  height = window.innerHeight;
+  cx = width / 2,
+  cy = height / 2,
+  renderer.setSize( width, height );
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  var fovInRadians = Math.tan( fov / 360 * Math.PI );
+  var cameraZ = ( height / 2 ) / fovInRadians;
+  camera.position.z = cameraZ;
+  render();
+}
+
+window.addEventListener( 'scroll', render );
+window.addEventListener( 'resize', updateCamera );
+
+
+// with jQuery
+// box
+var box = new THREE.Mesh(
+  new THREE.BoxGeometry( 150, 150, 150 ),
+  new THREE.MeshLambertMaterial( { color: 0x1e90ff, wireframe:true } )
+);
+box.scale.set( -1, -1, -1 );
+scene.add( box );
+var updateBoxPosition = function () {
+  var elmOffset = $( '.placeholder-box' ).offset();
+  box.position.set( elmOffset.left + 150 / 2, elmOffset.top + 150 / 2, 150 / 2 );
+}
+updateBoxPosition();
+$( window ).on( 'resize', updateBoxPosition );
+
+// sphere
+var sphere = new THREE.Mesh(
+  new THREE.SphereGeometry( 50, 8, 8 ),
+  new THREE.MeshLambertMaterial( { color: 0x1e90ff, wireframe:!true } )
+);
+sphere.scale.set( -1, -1, -1 );
+scene.add( sphere );
+var updateSpherePosition = function () {
+
+  var elmOffset = $( '.placeholder-sphere' ).offset();
+  var el = document.querySelector( '.placeholder-sphere' );
+  console.log( el.offsetTop );
+  console.log( elmOffset.top );
+  sphere.position.set( elmOffset.left + 50, elmOffset.top + 50, 25 );
+}
+updateSpherePosition();
+$( window ).on( 'resize', updateSpherePosition );
+
+// miku
+var loader = new THREE.JSONLoader();
+loader.load( './3dmodel/negimiku.js', function ( geometry, materials ) {
+  negimiku = new THREE.Mesh(
+    geometry,
+    new THREE.MeshFaceMaterial( materials )
+  );
+  var elmOffset = $( '.placeholder-sphere' ).offset();
+  negimiku.rotation.set( THREE.Math.degToRad( 270 ), THREE.Math.degToRad( 180+90 ), 0 );
+  negimiku.scale.set( -25, -25, -25 );
+  scene.add( negimiku );
+  var updateMikuPosition = function () {
+    var elmOffset = $( '.placeholder-miku' ).offset();
+    negimiku.position.set( elmOffset.left + 100, elmOffset.top + 100, 0 );
+  }
+  updateMikuPosition();
+  $( window ).on( 'resize', updateMikuPosition );
+
+  render();
+} );
+
+render();
+</script>
+
+</body>
+</html>
