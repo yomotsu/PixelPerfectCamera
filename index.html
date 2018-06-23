@@ -8,7 +8,7 @@
   font-size: 20px;
   position: relative;
   z-index:1;
-  height: 1000px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .placeholder-box{
@@ -95,134 +95,170 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
 </div>
 
 
-<script src="three.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/93/three.min.js"></script>
 <script>
 
-var width  = window.innerWidth,
-    height = window.innerHeight,
-    cx = width / 2,
-    cy = height / 2,
-    clock = new THREE.Clock(),
-    fov = 30;
+const width  = window.innerWidth;
+const height = window.innerHeight;
+const DPR = window.devicePixelRatio || 1;
 
-var scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
-var helper = new THREE.AxisHelper();
-helper.scale.set( 500, 500, 500 );
-helper.position.set( cx, cy, 0 );
-scene.add( helper );
+const camera = new THREE.PerspectiveCamera( 30, width / height, 0.1, 10000 );
+const fovInRadians = THREE.Math.degToRad( camera.fov ); // convert to radians
+const cameraZ = height / ( 2 * Math.tan( fovInRadians / 2 ) );
+camera.position.set( 0, 0, cameraZ ); // still right handed
 
-var camera = new THREE.PerspectiveCamera( fov, width / height, 0.1, 10000 );
-camera.scale.set( 1, 1, 1 );
-
-var fovInRadians = Math.tan( fov / 360 * Math.PI );
-var cameraZ = ( height / 2 ) / fovInRadians;
-camera.scale.x = -1;
-camera.position.set( cx, cy, cameraZ );
-camera.rotation.set( 0, 0, Math.PI );
-
-var viewport = document.createElement( 'canvas' );
+const viewport = document.createElement( 'canvas' );
 viewport.style.position = 'fixed';
 viewport.style.zIndex = 10;
 viewport.style.top = 0;
 viewport.style.left = 0;
 viewport.style.display = 'block';
 viewport.style.pointerEvents = 'none';
-var renderer = new THREE.WebGLRenderer( { canvas: viewport, alpha: true } );
+const renderer = new THREE.WebGLRenderer( {
+  canvas: viewport,
+  alpha: true,
+  antialias: false,
+  stencil: false,
+} );
+renderer.gammaInput = true;
+renderer.gammaOutput = true;
 renderer.setClearColor( 0x000000, 0 );
 renderer.setSize( width, height );
+renderer.setPixelRatio( DPR );
 document.body.appendChild( renderer.domElement );
 
+const renderAtNextFrame = ( () => {
 
-var ambientLight = new THREE.AmbientLight( 0x333333 );
+  let hasReneredAtCurrentFrame = false;
+
+  return function renderAtNextFrame() {
+
+    hasReneredAtCurrentFrame = false;
+
+    requestAnimationFrame( () => {
+
+      if ( hasReneredAtCurrentFrame ) return;
+
+      scrollSync();
+      renderer.render( scene, camera );
+      hasReneredAtCurrentFrame = true;
+
+    } );
+
+  }
+
+} )();
+
+
+const ambientLight = new THREE.AmbientLight( 0x333333 );
 scene.add( ambientLight );
 
-var directionalLight = new THREE.DirectionalLight( 0xffffff );
-directionalLight.position.set( 0, -1, 1 ).normalize();
+const directionalLight = new THREE.DirectionalLight( 0xffffff );
+directionalLight.position.set( 0, 0, 1 );
 scene.add( directionalLight );
 
-var render = function () {
-  var scroll = window.pageXOffset;
-  var scroll = window.pageYOffset;
-  camera.position.x =  scrollX + width / 2;
-  camera.position.y =  scrollY + height / 2;
-  renderer.render( scene, camera );
-}
+const cx = width / 2;
+const cy = height / 2;
+const contents3d = new THREE.Object3D();
+contents3d.position.set( cx, cy, 0 );
+scene.add( contents3d );
 
-var updateCamera = function () {
-  width = window.innerWidth,
-  height = window.innerHeight;
-  cx = width / 2,
-  cy = height / 2,
-  renderer.setSize( width, height );
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  var fovInRadians = Math.tan( fov / 360 * Math.PI );
-  var cameraZ = ( height / 2 ) / fovInRadians;
-  camera.position.z = cameraZ;
-  render();
-}
-
-window.addEventListener( 'scroll', render );
-window.addEventListener( 'resize', updateCamera );
+const helper = new THREE.AxesHelper( 500 );
+mapDomPosition( helper, document.body, 0 );
+window.addEventListener( 'resize', () => mapDomPosition( helper, document.body, 0 ) );
+contents3d.add( helper );
 
 
-// with jQuery
 // box
-var box = new THREE.Mesh(
+const box = new THREE.Mesh(
   new THREE.BoxGeometry( 150, 150, 150 ),
   new THREE.MeshLambertMaterial( { color: 0x1e90ff, wireframe:true } )
 );
-box.scale.set( -1, -1, -1 );
-scene.add( box );
-var updateBoxPosition = function () {
-  var elmOffset = $( '.placeholder-box' ).offset();
-  box.position.set( elmOffset.left + 150 / 2, elmOffset.top + 150 / 2, 150 / 2 );
-}
-updateBoxPosition();
-$( window ).on( 'resize', updateBoxPosition );
+contents3d.add( box );
+const $boxPlaceholder = document.querySelector( '.placeholder-box' );
+mapDomPosition( box, $boxPlaceholder, 150 / 2 );
+window.addEventListener( 'resize', () => mapDomPosition( box, $boxPlaceholder, 150 / 2 ) );
 
 // sphere
-var sphere = new THREE.Mesh(
-  new THREE.SphereGeometry( 50, 8, 8 ),
-  new THREE.MeshLambertMaterial( { color: 0x1e90ff, wireframe:!true } )
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry( 50, 16, 16 ),
+  new THREE.MeshLambertMaterial( { color: 0x1e90ff } )
 );
-sphere.scale.set( -1, -1, -1 );
-scene.add( sphere );
-var updateSpherePosition = function () {
+contents3d.add( sphere );
 
-  var elmOffset = $( '.placeholder-sphere' ).offset();
-  var el = document.querySelector( '.placeholder-sphere' );
-  console.log( el.offsetTop );
-  console.log( elmOffset.top );
-  sphere.position.set( elmOffset.left + 50, elmOffset.top + 50, 25 );
-}
-updateSpherePosition();
-$( window ).on( 'resize', updateSpherePosition );
+const $spherePlaceholder = document.querySelector( '.placeholder-sphere' );
+mapDomPosition( sphere, $spherePlaceholder );
+window.addEventListener( 'resize', () => mapDomPosition( sphere, $spherePlaceholder ) );
+
 
 // miku
-var loader = new THREE.JSONLoader();
-loader.load( './3dmodel/negimiku.js', function ( geometry, materials ) {
-  negimiku = new THREE.Mesh(
-    geometry,
-    new THREE.MeshFaceMaterial( materials )
-  );
-  var elmOffset = $( '.placeholder-sphere' ).offset();
-  negimiku.rotation.set( THREE.Math.degToRad( 270 ), THREE.Math.degToRad( 180+90 ), 0 );
-  negimiku.scale.set( -25, -25, -25 );
-  scene.add( negimiku );
-  var updateMikuPosition = function () {
-    var elmOffset = $( '.placeholder-miku' ).offset();
-    negimiku.position.set( elmOffset.left + 100, elmOffset.top + 100, 0 );
-  }
-  updateMikuPosition();
-  $( window ).on( 'resize', updateMikuPosition );
+const loader = new THREE.JSONLoader();
+loader.load( './3dmodel/negimiku.js', ( geometry, materials ) => {
 
-  render();
+  const negimiku = new THREE.Mesh( geometry, materials );
+
+  negimiku.rotation.set(
+    90 * THREE.Math.DEG2RAD,
+    90 * THREE.Math.DEG2RAD,
+    0
+  );
+  negimiku.scale.set( 20, 20, 20 );
+  contents3d.add( negimiku );
+
+  const $placeholder = document.querySelector( '.placeholder-miku' );
+  mapDomPosition( negimiku, $placeholder );
+  window.addEventListener( 'resize', () => mapDomPosition( negimiku, $placeholder ) );
+
+  renderAtNextFrame();
+
 } );
 
-render();
+renderAtNextFrame();
+window.addEventListener( 'scroll', renderAtNextFrame );
+window.addEventListener( 'resize', onResolutionChange );
+
+
+function scrollSync() {
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const scrollX = window.pageXOffset;
+  const scrollY = window.pageYOffset;
+  contents3d.position.x =  - scrollX - width * 0.5;
+  contents3d.position.y =    scrollY - height * 0.5;
+
+}
+
+function onResolutionChange() {
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const cx = width / 2;
+  const cy = height / 2;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  const fovInRadians = THREE.Math.degToRad( camera.fov ); // convert to radians
+  camera.position.z = height / ( 2 * Math.tan( fovInRadians / 2 ) );
+  contents3d.position.set( cx, cy, 0 );
+  renderer.setSize( width, height );
+
+  renderAtNextFrame();
+
+}
+
+
+function mapDomPosition( object3d, element, z = 0 ) {
+
+  const windowHeight = window.innerHeight;
+  const elementRect = element.getBoundingClientRect();
+
+  const x = window.pageXOffset + ( elementRect.left + elementRect.width * 0.5 );
+  const y = windowHeight - window.pageYOffset - ( elementRect.top + elementRect.height * 0.5 );
+  object3d.position.set( x, y, z );
+
+}
 </script>
 
 </body>
